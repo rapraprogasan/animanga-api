@@ -2,7 +2,7 @@
 // Created by: Mark Joseph Tabugon Rogasan
 
 // API Configuration - UPDATE THIS WITH YOUR RENDER URL
-const API_URL = 'https://your-animanga-api.onrender.com/items'; 
+const API_URL = 'https://animanga-api.onrender.com/items'; 
 // Change to: https://animanga-api-[YOURNAME].onrender.com/items
 
 // Local storage fallback
@@ -759,4 +759,5 @@ function getSampleData() {
         }
     ];
 }
+
 
