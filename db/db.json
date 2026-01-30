@@ -1,0 +1,52 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "title": "Attack on Titan",
+      "type": "anime",
+      "status": "completed",
+      "episodes": 75,
+      "score": 9.0,
+      "poster": "https://images.unsplash.com/photo-1639322537228-f710d846310a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "videoUrl": "https://www.youtube.com/embed/MGRm4IzK1SQ",
+      "notes": "One of the best anime ever. The plot twists are incredible!",
+      "year": 2013
+    },
+    {
+      "id": 2,
+      "title": "Demon Slayer",
+      "type": "anime",
+      "status": "watching",
+      "episodes": 55,
+      "score": 8.7,
+      "poster": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "videoUrl": "https://www.youtube.com/embed/VQGCKyvzIM4",
+      "notes": "Amazing animation and fight scenes. Currently watching season 3.",
+      "year": 2019
+    },
+    {
+      "id": 3,
+      "title": "One Piece",
+      "type": "manga",
+      "status": "watching",
+      "chapters": 1070,
+      "score": 8.9,
+      "poster": "https://images.unsplash.com/photo-1635805737707-575885ab0820?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "videoUrl": "https://www.youtube.com/embed/sOP9Rg_USII",
+      "notes": "Long but worth it. The world building is incredible.",
+      "year": 1999
+    },
+    {
+      "id": 4,
+      "title": "Jujutsu Kaisen",
+      "type": "anime",
+      "status": "completed",
+      "episodes": 47,
+      "score": 8.6,
+      "poster": "https://images.unsplash.com/photo-1639322537502-9e1a6b8b1b8d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "videoUrl": "https://www.youtube.com/embed/pkKu9hLT-t8",
+      "notes": "Great characters and animation. Excited for season 2!",
+      "year": 2020
+    }
+  ]
+}
