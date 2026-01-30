@@ -1,10 +1,11 @@
 {
-  "name": "animanga-api",
+  "name": "animanga-tracker-api",
   "version": "1.0.0",
-  "description": "API server for Anime Manga Tracker",
+  "description": "API server for Anime Manga Memory Tracker by Mark Joseph Tabugon Rogasan",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
     "json-server": "^0.17.4",
