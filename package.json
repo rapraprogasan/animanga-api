@@ -1,0 +1,15 @@
+{
+  "name": "animanga-api",
+  "version": "1.0.0",
+  "description": "API server for Anime Manga Tracker",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "json-server": "^0.17.4",
+    "cors": "^2.8.5"
+  },
+  "author": "Mark Joseph Tabugon Rogasan",
+  "license": "MIT"
+}
