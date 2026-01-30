@@ -1,450 +1,215 @@
-// API Configuration
-const API_URL = 'https://animanga-api.onrender.com/items'; // Will be replaced with your Render URL
+// ANIME MANGA TRACKER - FULL CRUD OPERATIONS
+// Created by: Mark Joseph Tabugon Rogasan
+
+// API Configuration - UPDATE THIS WITH YOUR RENDER URL
+const API_URL = 'https://your-animanga-api.onrender.com/items'; 
+// Change to: https://animanga-api-[YOURNAME].onrender.com/items
+
+// Local storage fallback
+const LOCAL_STORAGE_KEY = 'animanga_memories';
 
 // DOM Elements
-const contentGrid = document.getElementById('content-grid');
-const searchInput = document.getElementById('search-input');
-const navLinks = document.querySelectorAll('.nav-links a');
-const sectionTitle = document.getElementById('section-title');
-const videoModal = document.getElementById('video-modal');
-const videoFrame = document.getElementById('video-frame');
-const videoTitle = document.getElementById('video-title');
-const videoDescription = document.getElementById('video-description');
-const editModal = document.getElementById('edit-modal');
-const itemForm = document.getElementById('item-form');
-const modalTitle = document.getElementById('modal-title');
-const addItemBtn = document.getElementById('add-item-btn');
-const refreshBtn = document.getElementById('refresh-btn');
-const syncStatus = document.getElementById('sync-status');
-const loadingScreen = document.getElementById('loading-screen');
-
-// Form elements
-const itemId = document.getElementById('item-id');
-const titleInput = document.getElementById('title');
-const typeInput = document.getElementById('type');
-const statusInput = document.getElementById('status');
-const episodesInput = document.getElementById('episodes');
-const episodesLabel = document.getElementById('episodes-label');
-const scoreInput = document.getElementById('score');
-const yearInput = document.getElementById('year');
-const posterInput = document.getElementById('poster');
-const videoUrlInput = document.getElementById('videoUrl');
-const notesInput = document.getElementById('notes');
-const saveBtn = document.getElementById('save-btn');
-const cancelBtn = document.getElementById('cancel-btn');
-
-// State variables
+let items = [];
 let currentFilter = 'all';
 let currentType = 'all';
 let searchTerm = '';
-let items = [];
-let isOnline = true;
+let itemToDelete = null;
 
-// Initialize
+// Initialize when page loads
 document.addEventListener('DOMContentLoaded', async () => {
-    // Hide loading screen after 1.5 seconds
-    setTimeout(() => {
-        loadingScreen.style.opacity = '0';
-        setTimeout(() => {
-            loadingScreen.style.display = 'none';
-        }, 500);
-    }, 1500);
-
-    // Load data from API
+    // Show loading screen
+    showLoadingScreen();
+    
+    // Load data
     await loadData();
     
     // Setup event listeners
     setupEventListeners();
     
     // Initial render
-    renderItems(items);
-    updateStats();
+    updateUI();
+    
+    // Hide loading screen
+    setTimeout(() => {
+        hideLoadingScreen();
+    }, 1000);
 });
 
-// Setup all event listeners
-function setupEventListeners() {
-    // Search
-    searchInput.addEventListener('input', function() {
-        searchTerm = this.value.toLowerCase();
-        filterItems();
-    });
-    
-    // Navigation
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            navLinks.forEach(l => l.classList.remove('active'));
-            this.classList.add('active');
-            
-            const filter = this.getAttribute('data-filter');
-            const type = this.getAttribute('data-type');
-            
-            if (filter) {
-                currentFilter = filter;
-                currentType = 'all';
-                sectionTitle.textContent = getSectionTitle(filter);
-            } else if (type) {
-                currentType = type;
-                currentFilter = 'all';
-                sectionTitle.textContent = getSectionTitle(type);
-            }
-            
-            filterItems();
-            
-            // Close mobile menu if open
-            if (window.innerWidth <= 768) {
-                document.querySelector('.nav-links').classList.remove('active');
-            }
-        });
-    });
-    
-    // Mobile menu
-    document.querySelector('.menu-toggle').addEventListener('click', function() {
-        document.querySelector('.nav-links').classList.toggle('active');
-    });
-    
-    // Video modal
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (this.classList.contains('video-close')) {
-                closeVideoModal();
-            } else {
-                closeEditModal();
-            }
-        });
-    });
-    
-    window.addEventListener('click', function(e) {
-        if (e.target === videoModal) closeVideoModal();
-        if (e.target === editModal) closeEditModal();
-    });
-    
-    // Add item button
-    addItemBtn.addEventListener('click', () => openEditModal());
-    
-    // Refresh button
-    refreshBtn.addEventListener('click', async () => {
-        refreshBtn.style.animation = 'spin 1s linear';
-        await loadData();
-        setTimeout(() => {
-            refreshBtn.style.animation = '';
-        }, 1000);
-    });
-    
-    // Form type change
-    typeInput.addEventListener('change', function() {
-        episodesLabel.textContent = this.value === 'anime' ? 'Episodes' : 'Chapters';
-    });
-    
-    // Form submission
-    itemForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        await saveItem();
-    });
-    
-    // Cancel button
-    cancelBtn.addEventListener('click', closeEditModal);
-    
-    // Check online status
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-    updateOnlineStatus();
-}
+// ====================
+// DATA FUNCTIONS
+// ====================
 
-// API Functions
 async function loadData() {
+    showLoading();
+    
     try {
-        showLoading();
+        // Try to load from API first
+        const response = await fetch(API_URL);
         
-        // For demo purposes, if no API_URL is set, use local data
-        if (!API_URL.includes('your-render-app')) {
-            const response = await fetch(API_URL);
-            if (!response.ok) throw new Error('Failed to fetch data');
+        if (response.ok) {
             items = await response.json();
+            updateSyncStatus(true);
+            console.log('Data loaded from API:', items.length, 'items');
         } else {
-            // Fallback to local data for demo
-            items = [
-                {
-                    id: 1,
-                    title: "Attack on Titan",
-                    type: "anime",
-                    status: "completed",
-                    episodes: 75,
-                    score: 9.0,
-                    poster: "https://images.unsplash.com/photo-1639322537228-f710d846310a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-                    videoUrl: "https://www.youtube.com/embed/MGRm4IzK1SQ",
-                    notes: "One of the best anime ever. The plot twists are incredible!",
-                    year: 2013
-                },
-                {
-                    id: 2,
-                    title: "Demon Slayer",
-                    type: "anime",
-                    status: "watching",
-                    episodes: 55,
-                    score: 8.7,
-                    poster: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-                    videoUrl: "https://www.youtube.com/embed/VQGCKyvzIM4",
-                    notes: "Amazing animation and fight scenes. Currently watching season 3.",
-                    year: 2019
-                }
-            ];
+            throw new Error('API failed');
         }
-        
-        syncStatus.textContent = 'Online';
-        syncStatus.style.color = '#28a745';
-        isOnline = true;
-        
-        renderItems(items);
-        updateStats();
     } catch (error) {
-        console.error('Error loading data:', error);
-        syncStatus.textContent = 'Offline';
-        syncStatus.style.color = '#dc3545';
-        isOnline = false;
+        console.log('Falling back to local storage:', error.message);
         
-        // Try to load from localStorage as fallback
-        const savedData = localStorage.getItem('animangaData');
+        // Fallback to local storage
+        const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+        
         if (savedData) {
             items = JSON.parse(savedData);
-            renderItems(items);
-            updateStats();
-        }
-    } finally {
-        hideLoading();
-    }
-}
-
-async function saveItem() {
-    const formData = {
-        title: titleInput.value,
-        type: typeInput.value,
-        status: statusInput.value,
-        score: parseFloat(scoreInput.value) || null,
-        year: parseInt(yearInput.value) || null,
-        poster: posterInput.value || getDefaultPoster(typeInput.value),
-        videoUrl: videoUrlInput.value || '',
-        notes: notesInput.value,
-        [typeInput.value === 'anime' ? 'episodes' : 'chapters']: parseInt(episodesInput.value) || null
-    };
-    
-    const id = itemId.value;
-    
-    try {
-        showLoading();
-        
-        if (id) {
-            // Update existing item
-            if (!API_URL.includes('your-render-app')) {
-                const response = await fetch(`${API_URL}/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({...formData, id: parseInt(id)})
-                });
-                
-                if (!response.ok) throw new Error('Failed to update item');
-            }
-            
-            // Update local data
-            const index = items.findIndex(item => item.id === parseInt(id));
-            if (index !== -1) {
-                items[index] = { ...items[index], ...formData, id: parseInt(id) };
-            }
+            updateSyncStatus(false, 'Using local storage');
         } else {
-            // Add new item
-            const newId = Math.max(...items.map(item => item.id), 0) + 1;
-            const newItem = { ...formData, id: newId };
-            
-            if (!API_URL.includes('your-render-app')) {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(newItem)
-                });
-                
-                if (!response.ok) throw new Error('Failed to add item');
-            }
-            
-            items.push(newItem);
+            // Load sample data
+            items = getSampleData();
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
+            updateSyncStatus(false, 'Using sample data');
         }
-        
-        // Save to localStorage as backup
-        localStorage.setItem('animangaData', JSON.stringify(items));
-        
-        closeEditModal();
-        renderItems(items);
-        updateStats();
-        
-        showNotification(id ? 'Item updated successfully!' : 'Item added successfully!');
-    } catch (error) {
-        console.error('Error saving item:', error);
-        showNotification('Failed to save item. Using local storage.', true);
-        
-        // Fallback to localStorage
-        if (id) {
-            const index = items.findIndex(item => item.id === parseInt(id));
-            if (index !== -1) {
-                items[index] = { ...items[index], ...formData, id: parseInt(id) };
-            }
-        } else {
-            const newId = Math.max(...items.map(item => item.id), 0) + 1;
-            items.push({ ...formData, id: newId });
-        }
-        
-        localStorage.setItem('animangaData', JSON.stringify(items));
-        
-        closeEditModal();
-        renderItems(items);
-        updateStats();
     } finally {
         hideLoading();
     }
 }
 
-async function deleteItem(id) {
-    if (!confirm('Are you sure you want to delete this item?')) return;
-    
+function saveToLocalStorage() {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
+}
+
+async function saveToAPI(item, isUpdate = false) {
     try {
-        showLoading();
+        const url = isUpdate ? `${API_URL}/${item.id}` : API_URL;
+        const method = isUpdate ? 'PUT' : 'POST';
         
-        if (!API_URL.includes('your-render-app')) {
-            const response = await fetch(`${API_URL}/${id}`, {
-                method: 'DELETE'
-            });
-            
-            if (!response.ok) throw new Error('Failed to delete item');
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(item)
+        });
+        
+        if (response.ok) {
+            updateSyncStatus(true);
+            return await response.json();
+        } else {
+            throw new Error('API save failed');
         }
-        
-        // Update local data
-        items = items.filter(item => item.id !== id);
-        localStorage.setItem('animangaData', JSON.stringify(items));
-        
-        renderItems(items);
-        updateStats();
-        showNotification('Item deleted successfully!');
     } catch (error) {
-        console.error('Error deleting item:', error);
-        showNotification('Failed to delete item from server. Deleted locally.', true);
-        
-        // Fallback to localStorage
-        items = items.filter(item => item.id !== id);
-        localStorage.setItem('animangaData', JSON.stringify(items));
-        
-        renderItems(items);
-        updateStats();
-    } finally {
-        hideLoading();
+        console.log('Saving to local storage instead');
+        saveToLocalStorage();
+        updateSyncStatus(false, 'Saved locally');
+        return item;
     }
 }
 
-// UI Functions
+async function deleteFromAPI(id) {
+    try {
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            updateSyncStatus(true);
+            return true;
+        } else {
+            throw new Error('API delete failed');
+        }
+    } catch (error) {
+        console.log('Deleting from local storage instead');
+        saveToLocalStorage();
+        updateSyncStatus(false, 'Deleted locally');
+        return true;
+    }
+}
+
+// ====================
+// UI FUNCTIONS
+// ====================
+
+function updateUI() {
+    const filteredItems = filterItems();
+    renderItems(filteredItems);
+    updateStats();
+    updateSearchCount();
+    updateSectionTitle();
+}
+
 function renderItems(itemsToRender) {
-    contentGrid.innerHTML = '';
+    const grid = document.getElementById('content-grid');
+    const noItems = document.getElementById('no-items');
     
     if (itemsToRender.length === 0) {
-        contentGrid.innerHTML = `
-            <div class="no-results">
-                <i class="fas fa-search"></i>
-                <h3>No items found</h3>
-                <p>Try a different search or filter</p>
-            </div>
-        `;
+        grid.innerHTML = '';
+        noItems.style.display = 'block';
         return;
     }
     
-    itemsToRender.forEach(item => {
-        const itemCard = document.createElement('div');
-        itemCard.className = 'item-card';
-        
-        const episodeText = item.type === 'anime' ? 'Episodes' : 'Chapters';
-        const episodeCount = item.episodes || item.chapters || 0;
-        const statusClass = `status-${item.status}`;
-        const typeClass = `type-${item.type}`;
-        
-        itemCard.innerHTML = `
+    noItems.style.display = 'none';
+    
+    grid.innerHTML = itemsToRender.map(item => `
+        <div class="item-card" data-id="${item.id}">
             <div class="poster-container">
-                <img src="${item.poster || getDefaultPoster(item.type)}" alt="${item.title}" class="poster" onerror="this.src='https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'">
+                <img src="${getPosterUrl(item)}" alt="${item.title}" class="poster">
                 <div class="poster-overlay">
-                    <div class="play-button" data-id="${item.id}" data-video="${item.videoUrl}" data-title="${item.title}">
-                        <i class="fas fa-play"></i>
+                    <div class="item-actions">
+                        <button class="action-btn btn-play" onclick="playVideo('${item.videoUrl}', '${item.title}')">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="action-btn btn-edit" onclick="editItem(${item.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn btn-delete" onclick="confirmDelete(${item.id}, '${item.title}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
-                    <div class="edit-button" data-id="${item.id}">
-                        <i class="fas fa-edit"></i>
-                    </div>
-                    <div class="delete-button" data-id="${item.id}">
-                        <i class="fas fa-trash"></i>
+                    <div class="item-type-badge ${item.type === 'anime' ? 'badge-anime' : 'badge-manga'}">
+                        ${item.type.toUpperCase()}
                     </div>
                 </div>
             </div>
             <div class="item-info">
                 <div class="item-header">
                     <h3 class="item-title">${item.title}</h3>
-                    <span class="item-type ${typeClass}">${item.type.toUpperCase()}</span>
+                    <div class="item-score">
+                        <i class="fas fa-star"></i> ${item.score || 'N/A'}
+                    </div>
                 </div>
                 <div class="item-meta">
-                    <span>${item.year || 'N/A'}</span>
-                    <span>${episodeText}: ${episodeCount}</span>
-                    <span>Score: ${item.score || 'N/A'}/10</span>
+                    <span><i class="fas fa-calendar"></i> ${item.year || 'N/A'}</span>
+                    <span><i class="fas fa-list-ol"></i> ${getEpisodeText(item)}</span>
                 </div>
-                <div class="item-status ${statusClass}">
+                <div class="item-status ${getStatusClass(item.status)}">
                     ${getStatusText(item.status)}
                 </div>
-                ${item.notes ? `<div class="item-notes"><p>${item.notes}</p></div>` : ''}
+                ${item.notes ? `
+                <div class="item-notes">
+                    <p>${item.notes}</p>
+                </div>
+                ` : ''}
             </div>
-        `;
-        
-        contentGrid.appendChild(itemCard);
-    });
-    
-    // Add event listeners to buttons
-    document.querySelectorAll('.play-button').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const videoUrl = this.getAttribute('data-video');
-            const title = this.getAttribute('data-title');
-            openVideoModal(videoUrl, title);
-        });
-    });
-    
-    document.querySelectorAll('.edit-button').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const id = parseInt(this.getAttribute('data-id'));
-            const item = items.find(item => item.id === id);
-            if (item) openEditModal(item);
-        });
-    });
-    
-    document.querySelectorAll('.delete-button').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const id = parseInt(this.getAttribute('data-id'));
-            deleteItem(id);
-        });
-    });
+        </div>
+    `).join('');
 }
 
 function filterItems() {
-    let filteredItems = items;
-    
-    if (currentType !== 'all') {
-        filteredItems = filteredItems.filter(item => item.type === currentType);
-    }
-    
-    if (currentFilter !== 'all') {
-        filteredItems = filteredItems.filter(item => item.status === currentFilter);
-    }
-    
-    if (searchTerm) {
-        filteredItems = filteredItems.filter(item => 
-            item.title.toLowerCase().includes(searchTerm) || 
-            (item.notes && item.notes.toLowerCase().includes(searchTerm))
-        );
-    }
-    
-    renderItems(filteredItems);
+    return items.filter(item => {
+        // Type filter
+        if (currentType !== 'all' && item.type !== currentType) return false;
+        
+        // Status filter
+        if (currentFilter !== 'all' && item.status !== currentFilter) return false;
+        
+        // Search filter
+        if (searchTerm) {
+            const searchLower = searchTerm.toLowerCase();
+            return item.title.toLowerCase().includes(searchLower) || 
+                   (item.notes && item.notes.toLowerCase().includes(searchLower));
+        }
+        
+        return true;
+    });
 }
 
 function updateStats() {
@@ -457,19 +222,246 @@ function updateStats() {
     document.getElementById('total-manga').textContent = mangaCount;
     document.getElementById('total-watching').textContent = watchingCount;
     document.getElementById('total-completed').textContent = completedCount;
+    
+    const filteredCount = filterItems().length;
+    document.getElementById('items-count').textContent = filteredCount;
 }
 
-function getSectionTitle(filter) {
-    const titles = {
-        'all': 'All Items',
-        'watching': 'Currently Watching/Reading',
-        'completed': 'Completed',
-        'dropped': 'Dropped',
-        'plan': 'Plan to Watch/Read',
-        'anime': 'Anime',
-        'manga': 'Manga'
+function updateSearchCount() {
+    const count = filterItems().length;
+    const searchCount = document.getElementById('search-count');
+    
+    if (searchTerm && count > 0) {
+        searchCount.textContent = count;
+        searchCount.style.display = 'block';
+    } else {
+        searchCount.style.display = 'none';
+    }
+}
+
+function updateSectionTitle() {
+    const title = document.getElementById('section-title');
+    let icon = 'fas fa-th-list';
+    let text = 'All Items';
+    
+    if (currentType === 'anime') {
+        icon = 'fas fa-tv';
+        text = 'Anime';
+    } else if (currentType === 'manga') {
+        icon = 'fas fa-book';
+        text = 'Manga';
+    } else if (currentFilter !== 'all') {
+        switch(currentFilter) {
+            case 'watching': 
+                icon = 'fas fa-clock';
+                text = 'Currently Watching/Reading';
+                break;
+            case 'completed':
+                icon = 'fas fa-check-circle';
+                text = 'Completed';
+                break;
+            case 'dropped':
+                icon = 'fas fa-times-circle';
+                text = 'Dropped';
+                break;
+            case 'plan':
+                icon = 'fas fa-calendar-plus';
+                text = 'Plan to Watch/Read';
+                break;
+        }
+    }
+    
+    title.innerHTML = `<i class="${icon}"></i> ${text}`;
+}
+
+function updateSyncStatus(online, message = null) {
+    const status = document.getElementById('sync-status');
+    
+    if (online) {
+        status.textContent = 'Online';
+        status.style.color = '#28a745';
+    } else {
+        status.textContent = message || 'Offline';
+        status.style.color = '#ffc107';
+    }
+}
+
+// ====================
+// CRUD OPERATIONS
+// ====================
+
+function addItem() {
+    document.getElementById('modal-title').textContent = 'Add New Anime/Manga';
+    document.getElementById('item-id').value = '';
+    document.getElementById('item-form').reset();
+    document.getElementById('episodes-label').textContent = 'Episodes';
+    document.getElementById('type').value = 'anime';
+    document.getElementById('status').value = 'plan';
+    
+    showModal('edit-modal');
+}
+
+async function saveItem() {
+    const form = document.getElementById('item-form');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const id = document.getElementById('item-id').value;
+    const item = {
+        title: document.getElementById('title').value,
+        type: document.getElementById('type').value,
+        status: document.getElementById('status').value,
+        episodes: document.getElementById('episodes').value || null,
+        score: document.getElementById('score').value || null,
+        year: document.getElementById('year').value || null,
+        poster: document.getElementById('poster').value || null,
+        videoUrl: document.getElementById('videoUrl').value || null,
+        notes: document.getElementById('notes').value || null
     };
-    return titles[filter] || 'All Items';
+    
+    showLoading();
+    
+    if (id) {
+        // Update existing item
+        item.id = parseInt(id);
+        const savedItem = await saveToAPI(item, true);
+        
+        const index = items.findIndex(i => i.id === item.id);
+        if (index !== -1) {
+            items[index] = savedItem;
+        }
+        
+        showNotification('Item updated successfully!');
+    } else {
+        // Add new item
+        const newId = items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1;
+        item.id = newId;
+        
+        const savedItem = await saveToAPI(item);
+        items.push(savedItem);
+        
+        showNotification('Item added successfully!');
+    }
+    
+    saveToLocalStorage();
+    hideLoading();
+    closeModal('edit-modal');
+    updateUI();
+}
+
+function editItem(id) {
+    const item = items.find(item => item.id === id);
+    if (!item) return;
+    
+    document.getElementById('modal-title').textContent = 'Edit Item';
+    document.getElementById('item-id').value = item.id;
+    document.getElementById('title').value = item.title;
+    document.getElementById('type').value = item.type;
+    document.getElementById('status').value = item.status;
+    document.getElementById('episodes').value = item.episodes || item.chapters || '';
+    document.getElementById('episodes-label').textContent = item.type === 'anime' ? 'Episodes' : 'Chapters';
+    document.getElementById('score').value = item.score || '';
+    document.getElementById('year').value = item.year || '';
+    document.getElementById('poster').value = item.poster || '';
+    document.getElementById('videoUrl').value = item.videoUrl || '';
+    document.getElementById('notes').value = item.notes || '';
+    
+    showModal('edit-modal');
+}
+
+function confirmDelete(id, title) {
+    itemToDelete = id;
+    document.getElementById('delete-item-title').textContent = title;
+    showModal('delete-modal');
+}
+
+async function deleteItem() {
+    if (!itemToDelete) return;
+    
+    showLoading();
+    
+    await deleteFromAPI(itemToDelete);
+    
+    // Remove from local array
+    items = items.filter(item => item.id !== itemToDelete);
+    
+    // Save to local storage
+    saveToLocalStorage();
+    
+    showNotification('Item deleted successfully!');
+    closeModal('delete-modal');
+    
+    itemToDelete = null;
+    updateUI();
+    hideLoading();
+}
+
+// ====================
+// MODAL FUNCTIONS
+// ====================
+
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function playVideo(videoUrl, title) {
+    if (!videoUrl) {
+        showNotification('No trailer available for this item', true);
+        return;
+    }
+    
+    // Convert YouTube URL to embed if needed
+    let embedUrl = videoUrl;
+    if (videoUrl.includes('youtube.com/watch')) {
+        const videoId = videoUrl.split('v=')[1]?.split('&')[0];
+        if (videoId) {
+            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+        }
+    }
+    
+    document.getElementById('video-frame').src = embedUrl;
+    document.getElementById('video-title').textContent = title;
+    document.getElementById('video-description').textContent = `Trailer for ${title}`;
+    
+    showModal('video-modal');
+}
+
+// ====================
+// UTILITY FUNCTIONS
+// ====================
+
+function getPosterUrl(item) {
+    if (item.poster) return item.poster;
+    
+    return item.type === 'anime' 
+        ? 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+        : 'https://images.unsplash.com/photo-1635805737707-575885ab0820?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+}
+
+function getEpisodeText(item) {
+    if (item.type === 'anime') {
+        return item.episodes ? `${item.episodes} episodes` : 'Unknown';
+    } else {
+        return item.episodes ? `${item.episodes} chapters` : 'Unknown';
+    }
+}
+
+function getStatusClass(status) {
+    return `status-${status}`;
 }
 
 function getStatusText(status) {
@@ -482,92 +474,39 @@ function getStatusText(status) {
     return statusMap[status] || status;
 }
 
-function getDefaultPoster(type) {
-    return type === 'anime' 
-        ? 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-        : 'https://images.unsplash.com/photo-1635805737707-575885ab0820?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+function showLoadingScreen() {
+    document.getElementById('loading-screen').style.display = 'flex';
 }
 
-// Modal Functions
-function openVideoModal(videoUrl, title) {
-    if (!videoUrl) {
-        showNotification('No trailer available for this item', true);
-        return;
-    }
-    
-    // Convert regular YouTube URL to embed URL if needed
-    let embedUrl = videoUrl;
-    if (videoUrl.includes('youtube.com/watch')) {
-        const videoId = videoUrl.split('v=')[1]?.split('&')[0];
-        if (videoId) {
-            embedUrl = `https://www.youtube.com/embed/${videoId}`;
-        }
-    }
-    
-    videoFrame.src = embedUrl;
-    videoTitle.textContent = title;
-    videoDescription.textContent = `Trailer for ${title}`;
-    videoModal.style.display = 'flex';
+function hideLoadingScreen() {
+    document.getElementById('loading-screen').style.opacity = '0';
+    setTimeout(() => {
+        document.getElementById('loading-screen').style.display = 'none';
+    }, 500);
 }
 
-function closeVideoModal() {
-    videoFrame.src = '';
-    videoModal.style.display = 'none';
-}
-
-function openEditModal(item = null) {
-    if (item) {
-        // Edit mode
-        modalTitle.textContent = 'Edit Item';
-        itemId.value = item.id;
-        titleInput.value = item.title;
-        typeInput.value = item.type;
-        statusInput.value = item.status;
-        episodesInput.value = item.episodes || item.chapters || '';
-        episodesLabel.textContent = item.type === 'anime' ? 'Episodes' : 'Chapters';
-        scoreInput.value = item.score || '';
-        yearInput.value = item.year || '';
-        posterInput.value = item.poster || '';
-        videoUrlInput.value = item.videoUrl || '';
-        notesInput.value = item.notes || '';
-    } else {
-        // Add mode
-        modalTitle.textContent = 'Add New Item';
-        itemId.value = '';
-        titleInput.value = '';
-        typeInput.value = 'anime';
-        statusInput.value = 'plan';
-        episodesInput.value = '';
-        episodesLabel.textContent = 'Episodes';
-        scoreInput.value = '';
-        yearInput.value = '';
-        posterInput.value = '';
-        videoUrlInput.value = '';
-        notesInput.value = '';
-    }
-    
-    editModal.style.display = 'flex';
-}
-
-function closeEditModal() {
-    editModal.style.display = 'none';
-    itemForm.reset();
-}
-
-// Utility Functions
 function showLoading() {
-    // Could add a small loading indicator
-    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-    saveBtn.disabled = true;
+    const saveBtn = document.getElementById('save-btn');
+    if (saveBtn) {
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveBtn.disabled = true;
+    }
 }
 
 function hideLoading() {
-    saveBtn.innerHTML = 'Save Item';
-    saveBtn.disabled = false;
+    const saveBtn = document.getElementById('save-btn');
+    if (saveBtn) {
+        saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Item';
+        saveBtn.disabled = false;
+    }
 }
 
 function showNotification(message, isError = false) {
-    // Create notification element
+    // Remove existing notifications
+    const existing = document.querySelector('.notification');
+    if (existing) existing.remove();
+    
+    // Create notification
     const notification = document.createElement('div');
     notification.className = `notification ${isError ? 'error' : 'success'}`;
     notification.innerHTML = `
@@ -576,91 +515,248 @@ function showNotification(message, isError = false) {
     `;
     
     // Add styles
-    const style = document.createElement('style');
-    style.textContent = `
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #28a745;
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 3000;
-            animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
-            animation-fill-mode: forwards;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-        .notification.error {
-            background: #dc3545;
-        }
-        .notification i {
-            font-size: 1.2rem;
-        }
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-    `;
+    if (!document.querySelector('#notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-styles';
+        style.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #28a745;
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 3000;
+                animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
+                animation-fill-mode: forwards;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+                max-width: 300px;
+            }
+            .notification.error {
+                background: #dc3545;
+            }
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
     
-    document.head.appendChild(style);
     document.body.appendChild(notification);
     
     // Remove after 3 seconds
     setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
-        if (style.parentNode) {
-            style.remove();
-        }
+        notification.remove();
     }, 3000);
 }
 
-function updateOnlineStatus() {
-    isOnline = navigator.onLine;
-    syncStatus.textContent = isOnline ? 'Online' : 'Offline';
-    syncStatus.style.color = isOnline ? '#28a745' : '#dc3545';
+// ====================
+// EVENT LISTENERS
+// ====================
+
+function setupEventListeners() {
+    // Navigation filters
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Update active state
+            document.querySelectorAll('.nav-links a').forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update filters
+            const filter = this.getAttribute('data-filter');
+            const type = this.getAttribute('data-type');
+            
+            if (filter) {
+                currentFilter = filter;
+                currentType = 'all';
+            } else if (type) {
+                currentType = type;
+                currentFilter = 'all';
+            }
+            
+            updateUI();
+            
+            // Close mobile menu
+            if (window.innerWidth <= 768) {
+                document.querySelector('.nav-links').classList.remove('active');
+            }
+        });
+    });
     
-    if (!isOnline) {
-        showNotification('You are offline. Changes will be saved locally.', true);
-    }
+    // Search
+    document.getElementById('search-input').addEventListener('input', function() {
+        searchTerm = this.value.trim();
+        updateUI();
+    });
+    
+    // Add item button
+    document.getElementById('add-item-btn').addEventListener('click', addItem);
+    document.getElementById('add-first-item').addEventListener('click', addItem);
+    
+    // Refresh button
+    document.getElementById('refresh-btn').addEventListener('click', async () => {
+        document.getElementById('refresh-btn').style.animation = 'spin 1s linear';
+        await loadData();
+        updateUI();
+        setTimeout(() => {
+            document.getElementById('refresh-btn').style.animation = '';
+        }, 1000);
+    });
+    
+    // Form submission
+    document.getElementById('item-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveItem();
+    });
+    
+    // Type change in form
+    document.getElementById('type').addEventListener('change', function() {
+        document.getElementById('episodes-label').textContent = 
+            this.value === 'anime' ? 'Episodes' : 'Chapters';
+    });
+    
+    // Cancel buttons
+    document.getElementById('cancel-btn').addEventListener('click', () => closeModal('edit-modal'));
+    document.getElementById('cancel-delete').addEventListener('click', () => closeModal('delete-modal'));
+    
+    // Delete confirmation
+    document.getElementById('confirm-delete').addEventListener('click', deleteItem);
+    
+    // Close modals
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (this.classList.contains('video-close')) {
+                closeModal('video-modal');
+            } else {
+                closeModal('edit-modal');
+            }
+        });
+    });
+    
+    // Close modals on outside click
+    window.addEventListener('click', function(e) {
+        if (e.target.id === 'edit-modal') closeModal('edit-modal');
+        if (e.target.id === 'video-modal') closeModal('video-modal');
+        if (e.target.id === 'delete-modal') closeModal('delete-modal');
+    });
+    
+    // Mobile menu toggle
+    document.querySelector('.menu-toggle').addEventListener('click', function() {
+        document.querySelector('.nav-links').classList.toggle('active');
+    });
+    
+    // View API link
+    document.getElementById('view-api')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.open(API_URL, '_blank');
+    });
+    
+    // Online/offline detection
+    window.addEventListener('online', () => updateSyncStatus(true));
+    window.addEventListener('offline', () => updateSyncStatus(false, 'Offline'));
 }
 
-// Add CSS for no results
-const noResultsStyle = document.createElement('style');
-noResultsStyle.textContent = `
-    .no-results {
-        grid-column: 1 / -1;
-        text-align: center;
-        padding: 4rem 2rem;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 15px;
-        backdrop-filter: blur(10px);
-    }
-    
-    .no-results i {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        color: var(--gray);
-    }
-    
-    .no-results h3 {
-        font-size: 1.8rem;
-        margin-bottom: 0.5rem;
-        color: white;
-    }
-    
-    .no-results p {
-        color: var(--gray);
-    }
-`;
+// ====================
+// SAMPLE DATA
+// ====================
 
-document.head.appendChild(noResultsStyle);
+function getSampleData() {
+    return [
+        {
+            id: 1,
+            title: "Attack on Titan",
+            type: "anime",
+            status: "completed",
+            episodes: 75,
+            score: 9.2,
+            poster: "https://images.unsplash.com/photo-1639322537228-f710d846310a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            videoUrl: "https://www.youtube.com/embed/MGRm4IzK1SQ",
+            notes: "One of the best anime ever! The plot twists are incredible. Eren's character development is amazing.",
+            year: 2013
+        },
+        {
+            id: 2,
+            title: "Demon Slayer",
+            type: "anime",
+            status: "watching",
+            episodes: 55,
+            score: 8.9,
+            poster: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            videoUrl: "https://www.youtube.com/embed/VQGCKyvzIM4",
+            notes: "Amazing animation and fight scenes. Tanjiro is such a good protagonist. Currently watching season 3.",
+            year: 2019
+        },
+        {
+            id: 3,
+            title: "One Piece",
+            type: "manga",
+            status: "watching",
+            episodes: 1070,
+            score: 9.5,
+            poster: "https://images.unsplash.com/photo-1635805737707-575885ab0820?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            videoUrl: "https://www.youtube.com/embed/sOP9Rg_USII",
+            notes: "Long but worth it. The world building is incredible. Luffy's journey is inspiring.",
+            year: 1999
+        },
+        {
+            id: 4,
+            title: "Jujutsu Kaisen",
+            type: "anime",
+            status: "completed",
+            episodes: 47,
+            score: 8.7,
+            poster: "https://images.unsplash.com/photo-1639322537502-9e1a6b8b1b8d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            videoUrl: "https://www.youtube.com/embed/pkKu9hLT-t8",
+            notes: "Great characters and animation. Gojo is awesome. Excited for season 2!",
+            year: 2020
+        },
+        {
+            id: 5,
+            title: "Death Note",
+            type: "anime",
+            status: "completed",
+            episodes: 37,
+            score: 8.8,
+            poster: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            videoUrl: "https://www.youtube.com/embed/NlJZ-YgAt-c",
+            notes: "Classic psychological thriller. Light and L's battle is legendary. Ryuk is hilarious.",
+            year: 2006
+        },
+        {
+            id: 6,
+            title: "My Hero Academia",
+            type: "anime",
+            status: "dropped",
+            episodes: 138,
+            score: 7.5,
+            poster: "https://images.unsplash.com/photo-1639322537502-9e1a6b8b1b8d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            videoUrl: "https://www.youtube.com/embed/w1xOQvGc1dI",
+            notes: "Started strong but lost interest after season 3. Too many characters, not enough development.",
+            year: 2016
+        },
+        {
+            id: 7,
+            title: "Chainsaw Man",
+            type: "manga",
+            status: "completed",
+            episodes: 97,
+            score: 9.0,
+            poster: "https://images.unsplash.com/photo-1639322537191-2f6e3a3b3c6f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            videoUrl: "https://www.youtube.com/embed/dFlDRhvM4L0",
+            notes: "Crazy and unique story. Denji is hilarious. Makima is... interesting. Can't wait for the anime!",
+            year: 2018
+        }
+    ];
+}
+
