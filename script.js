@@ -1,5 +1,5 @@
 // API Configuration
-const API_URL = 'https://your-render-app.onrender.com/items'; // Will be replaced with your Render URL
+const API_URL = 'https://animanga-api.onrender.com/items'; // Will be replaced with your Render URL
 
 // DOM Elements
 const contentGrid = document.getElementById('content-grid');
@@ -662,4 +662,5 @@ noResultsStyle.textContent = `
         color: var(--gray);
     }
 `;
+
 document.head.appendChild(noResultsStyle);
