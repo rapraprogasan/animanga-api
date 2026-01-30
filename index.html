@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AniManga Memory Tracker</title>
+    <title>AniManga Memory Tracker - Mark Joseph Tabugon Rogasan</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -12,78 +12,101 @@
     <!-- Loading Screen -->
     <div id="loading-screen">
         <div class="loading-content">
-            <img src="https://i.gifer.com/origin/36/365273637c45e0c09c20ab4fd5b3026d_w200.gif" alt="Loading..." class="loading-gif">
-            <p>Loading your memories...</p>
+            <div class="spinner"></div>
+            <h2>Loading Your Memories...</h2>
+            <p>Created by Mark Joseph Tabugon Rogasan</p>
         </div>
     </div>
 
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo">
-                <i class="fas fa-bookmark"></i>
-                <h1>AniManga Memory Tracker</h1>
-            </div>
-            
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" id="search-input" placeholder="Search anime or manga...">
-            </div>
-            
-            <div class="nav-menu">
-                <button class="menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <ul class="nav-links">
-                    <li><a href="#" class="active" data-filter="all">All</a></li>
-                    <li><a href="#" data-filter="watching">Currently Watching</a></li>
-                    <li><a href="#" data-filter="completed">Completed</a></li>
-                    <li><a href="#" data-filter="dropped">Dropped</a></li>
-                    <li><a href="#" data-filter="plan">Plan to Watch</a></li>
-                    <li><a href="#" data-type="manga">Manga</a></li>
-                    <li><a href="#" data-type="anime">Anime</a></li>
-                </ul>
-            </div>
+    <!-- Edit/Add Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content edit-modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="modal-title">Add New Anime/Manga</h2>
+            <form id="item-form">
+                <input type="hidden" id="item-id">
+                
+                <div class="form-group">
+                    <label for="title"><i class="fas fa-heading"></i> Title *</label>
+                    <input type="text" id="title" required placeholder="Enter anime/manga title">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="type"><i class="fas fa-tag"></i> Type *</label>
+                        <select id="type" required>
+                            <option value="">Select Type</option>
+                            <option value="anime">Anime</option>
+                            <option value="manga">Manga</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="status"><i class="fas fa-tasks"></i> Status *</label>
+                        <select id="status" required>
+                            <option value="">Select Status</option>
+                            <option value="watching">Currently Watching/Reading</option>
+                            <option value="completed">Completed</option>
+                            <option value="dropped">Dropped</option>
+                            <option value="plan">Plan to Watch/Read</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="episodes" id="episodes-label"><i class="fas fa-list-ol"></i> Episodes</label>
+                        <input type="number" id="episodes" min="0" placeholder="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="score"><i class="fas fa-star"></i> Score (1-10)</label>
+                        <input type="number" id="score" min="0" max="10" step="0.1" placeholder="8.5">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="year"><i class="fas fa-calendar"></i> Year</label>
+                        <input type="number" id="year" min="1900" max="2030" placeholder="2023">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="poster"><i class="fas fa-image"></i> Poster Image URL</label>
+                    <input type="url" id="poster" placeholder="https://example.com/image.jpg">
+                    <small class="form-help">Leave blank for default image</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="videoUrl"><i class="fas fa-play-circle"></i> Trailer YouTube URL</label>
+                    <input type="url" id="videoUrl" placeholder="https://youtube.com/embed/...">
+                    <small class="form-help">For embedded trailer player</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes"><i class="fas fa-sticky-note"></i> Notes & Memories</label>
+                    <textarea id="notes" rows="4" placeholder="Why I love this? What I remember? Characters I like..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-btn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="save-btn">
+                        <i class="fas fa-save"></i> Save Item
+                    </button>
+                </div>
+            </form>
         </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="container">
-        <!-- Stats Section -->
-        <section class="stats-section">
-            <div class="stats-card">
-                <h3><i class="fas fa-tv"></i> Total Anime</h3>
-                <p id="total-anime">0</p>
-            </div>
-            <div class="stats-card">
-                <h3><i class="fas fa-book"></i> Total Manga</h3>
-                <p id="total-manga">0</p>
-            </div>
-            <div class="stats-card">
-                <h3><i class="fas fa-clock"></i> Watching/Reading</h3>
-                <p id="total-watching">0</p>
-            </div>
-            <div class="stats-card">
-                <h3><i class="fas fa-check-circle"></i> Completed</h3>
-                <p id="total-completed">0</p>
-            </div>
-        </section>
-
-        <!-- Content Grid -->
-        <section class="content-section">
-            <h2 id="section-title">All Items</h2>
-            <div class="grid-container" id="content-grid">
-                <!-- Items will be loaded here by JavaScript -->
-            </div>
-        </section>
-    </main>
+    </div>
 
     <!-- Video Modal -->
     <div id="video-modal" class="modal">
         <div class="modal-content">
-            <span class="close-modal">&times;</span>
+            <span class="close-modal video-close">&times;</span>
             <div class="video-container">
-                <iframe id="video-frame" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                <iframe id="video-frame" src="" frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen></iframe>
             </div>
             <div class="video-info">
                 <h3 id="video-title"></h3>
@@ -92,35 +115,227 @@
         </div>
     </div>
 
+    <!-- Confirm Delete Modal -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content delete-modal-content">
+            <div class="delete-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3>Confirm Delete</h3>
+            <p>Are you sure you want to delete "<span id="delete-item-title"></span>"?</p>
+            <p class="delete-warning">This action cannot be undone!</p>
+            <div class="delete-actions">
+                <button class="btn btn-secondary" id="cancel-delete">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn btn-danger" id="confirm-delete">
+                    <i class="fas fa-trash"></i> Delete Permanently
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-bookmark"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>AniManga Memory Tracker</h1>
+                    <p class="tagline">Never Forget Your Favorite Series</p>
+                </div>
+            </div>
+            
+            <div class="nav-controls">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Search anime or manga...">
+                    <div class="search-results-count" id="search-count"></div>
+                </div>
+                
+                <div class="nav-actions">
+                    <button class="btn-add" id="add-item-btn">
+                        <i class="fas fa-plus"></i> Add New
+                    </button>
+                    <div class="sync-status">
+                        <span id="sync-status">Online</span>
+                        <i class="fas fa-sync-alt" id="refresh-btn" title="Refresh"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <ul class="nav-links">
+                <li><a href="#" class="active" data-filter="all">
+                    <i class="fas fa-th-large"></i> All
+                </a></li>
+                <li><a href="#" data-filter="watching">
+                    <i class="fas fa-clock"></i> Watching
+                </a></li>
+                <li><a href="#" data-filter="completed">
+                    <i class="fas fa-check-circle"></i> Completed
+                </a></li>
+                <li><a href="#" data-filter="dropped">
+                    <i class="fas fa-times-circle"></i> Dropped
+                </a></li>
+                <li><a href="#" data-filter="plan">
+                    <i class="fas fa-calendar-plus"></i> Plan to Watch
+                </a></li>
+                <li class="divider"></li>
+                <li><a href="#" data-type="anime">
+                    <i class="fas fa-tv"></i> Anime
+                </a></li>
+                <li><a href="#" data-type="manga">
+                    <i class="fas fa-book"></i> Manga
+                </a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Stats Section -->
+        <section class="stats-section">
+            <div class="stats-card">
+                <div class="stats-icon anime">
+                    <i class="fas fa-tv"></i>
+                </div>
+                <div class="stats-info">
+                    <h3>Total Anime</h3>
+                    <p id="total-anime">0</p>
+                </div>
+            </div>
+            <div class="stats-card">
+                <div class="stats-icon manga">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="stats-info">
+                    <h3>Total Manga</h3>
+                    <p id="total-manga">0</p>
+                </div>
+            </div>
+            <div class="stats-card">
+                <div class="stats-icon watching">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stats-info">
+                    <h3>Currently Watching</h3>
+                    <p id="total-watching">0</p>
+                </div>
+            </div>
+            <div class="stats-card">
+                <div class="stats-icon completed">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stats-info">
+                    <h3>Completed</h3>
+                    <p id="total-completed">0</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Content Section -->
+        <section class="content-section">
+            <div class="section-header">
+                <h2 id="section-title">
+                    <i class="fas fa-th-list"></i> All Items
+                </h2>
+                <div class="items-count">
+                    <span id="items-count">0</span> items
+                </div>
+            </div>
+            
+            <div class="grid-container" id="content-grid">
+                <!-- Items will load here -->
+                <div class="loading-items">
+                    <div class="spinner"></div>
+                    <p>Loading your collection...</p>
+                </div>
+            </div>
+            
+            <div class="no-items" id="no-items" style="display: none;">
+                <div class="no-items-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3>No Items Found</h3>
+                <p>Try adding new items or changing your filters</p>
+                <button class="btn-add" id="add-first-item">
+                    <i class="fas fa-plus"></i> Add Your First Item
+                </button>
+            </div>
+        </section>
+    </main>
+
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-container">
-            <div class="footer-about">
-                <h3>About This Website</h3>
-                <p>I created this website to keep track of all the anime and manga I've watched/read. Sometimes I forget the titles, so this helps me remember everything in one place!</p>
+            <div class="footer-section">
+                <h3><i class="fas fa-info-circle"></i> About This Website</h3>
+                <p>I created this website because I often forget the titles of anime and manga I've watched/read. 
+                This helps me keep track of everything in one place!</p>
+                <div class="feature-list">
+                    <p><i class="fas fa-check"></i> Never forget anime titles</p>
+                    <p><i class="fas fa-check"></i> Track watching progress</p>
+                    <p><i class="fas fa-check"></i> Save personal notes</p>
+                </div>
             </div>
             
-            <div class="footer-developer">
-                <h3>Developer</h3>
-                <p><i class="fas fa-user"></i> Mark Joseph Tabugon Rogasan</p>
-                <p><i class="fas fa-envelope"></i> Created with HTML, CSS & JavaScript</p>
+            <div class="footer-section">
+                <h3><i class="fas fa-user"></i> Developer</h3>
+                <div class="developer-info">
+                    <div class="developer-name">
+                        <i class="fas fa-code"></i>
+                        <div>
+                            <h4>Mark Joseph Tabugon Rogasan</h4>
+                            <p>Full Stack Developer</p>
+                        </div>
+                    </div>
+                    <p><i class="fas fa-envelope"></i> Created with HTML, CSS & JavaScript</p>
+                    <p><i class="fas fa-database"></i> Data saved online via Render.com</p>
+                    <p><i class="fas fa-cloud"></i> Real-time database sync</p>
+                </div>
             </div>
             
-            <div class="footer-tech">
-                <h3>Technology Used</h3>
-                <p><i class="fas fa-database"></i> Data saved online via Render.com</p>
-                <p><i class="fas fa-search"></i> Real-time search and filtering</p>
-                <p><i class="fas fa-play-circle"></i> Embedded video player</p>
+            <div class="footer-section">
+                <h3><i class="fas fa-cogs"></i> Technology</h3>
+                <div class="tech-stack">
+                    <span class="tech-tag">HTML5</span>
+                    <span class="tech-tag">CSS3</span>
+                    <span class="tech-tag">JavaScript</span>
+                    <span class="tech-tag">JSON Server</span>
+                    <span class="tech-tag">Render.com</span>
+                </div>
+                <div class="features">
+                    <p><i class="fas fa-search"></i> Instant search as you type</p>
+                    <p><i class="fas fa-play-circle"></i> Embedded video player</p>
+                    <p><i class="fas fa-edit"></i> Add/Edit/Delete items</p>
+                    <p><i class="fas fa-mobile-alt"></i> Mobile responsive</p>
+                </div>
             </div>
         </div>
         
         <div class="footer-bottom">
-            <p>&copy; 2023 AniManga Memory Tracker | Made to Never Forget</p>
+            <div class="copyright">
+                <p>&copy; 2024 AniManga Memory Tracker | Created by Mark Joseph Tabugon Rogasan</p>
+                <p class="footer-motto">Made to Never Forget Your Favorite Series</p>
+            </div>
+            <div class="footer-links">
+                <a href="#" class="footer-link" id="view-api">
+                    <i class="fas fa-database"></i> View API
+                </a>
+                <a href="https://render.com" target="_blank" class="footer-link">
+                    <i class="fas fa-server"></i> Hosted on Render
+                </a>
+            </div>
         </div>
     </footer>
 
-    <!-- JavaScript Files -->
-    <script src="data.js"></script>
+    <!-- JavaScript -->
     <script src="script.js"></script>
 </body>
 </html>
