@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AniManga Memory Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <img src="https://i.gifer.com/origin/36/365273637c45e0c09c20ab4fd5b3026d_w200.gif" alt="Loading..." class="loading-gif">
+            <p>Loading your memories...</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-bookmark"></i>
+                <h1>AniManga Memory Tracker</h1>
+            </div>
+            
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="Search anime or manga...">
+            </div>
+            
+            <div class="nav-menu">
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <ul class="nav-links">
+                    <li><a href="#" class="active" data-filter="all">All</a></li>
+                    <li><a href="#" data-filter="watching">Currently Watching</a></li>
+                    <li><a href="#" data-filter="completed">Completed</a></li>
+                    <li><a href="#" data-filter="dropped">Dropped</a></li>
+                    <li><a href="#" data-filter="plan">Plan to Watch</a></li>
+                    <li><a href="#" data-type="manga">Manga</a></li>
+                    <li><a href="#" data-type="anime">Anime</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Stats Section -->
+        <section class="stats-section">
+            <div class="stats-card">
+                <h3><i class="fas fa-tv"></i> Total Anime</h3>
+                <p id="total-anime">0</p>
+            </div>
+            <div class="stats-card">
+                <h3><i class="fas fa-book"></i> Total Manga</h3>
+                <p id="total-manga">0</p>
+            </div>
+            <div class="stats-card">
+                <h3><i class="fas fa-clock"></i> Watching/Reading</h3>
+                <p id="total-watching">0</p>
+            </div>
+            <div class="stats-card">
+                <h3><i class="fas fa-check-circle"></i> Completed</h3>
+                <p id="total-completed">0</p>
+            </div>
+        </section>
+
+        <!-- Content Grid -->
+        <section class="content-section">
+            <h2 id="section-title">All Items</h2>
+            <div class="grid-container" id="content-grid">
+                <!-- Items will be loaded here by JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Video Modal -->
+    <div id="video-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="video-container">
+                <iframe id="video-frame" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <div class="video-info">
+                <h3 id="video-title"></h3>
+                <p id="video-description"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-about">
+                <h3>About This Website</h3>
+                <p>I created this website to keep track of all the anime and manga I've watched/read. Sometimes I forget the titles, so this helps me remember everything in one place!</p>
+            </div>
+            
+            <div class="footer-developer">
+                <h3>Developer</h3>
+                <p><i class="fas fa-user"></i> Mark Joseph Tabugon Rogasan</p>
+                <p><i class="fas fa-envelope"></i> Created with HTML, CSS & JavaScript</p>
+            </div>
+            
+            <div class="footer-tech">
+                <h3>Technology Used</h3>
+                <p><i class="fas fa-database"></i> Data saved online via Render.com</p>
+                <p><i class="fas fa-search"></i> Real-time search and filtering</p>
+                <p><i class="fas fa-play-circle"></i> Embedded video player</p>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2023 AniManga Memory Tracker | Made to Never Forget</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Files -->
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
