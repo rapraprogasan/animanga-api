@@ -1,6 +1,7 @@
 services:
+  # Frontend Website (Static Site)
   - type: web
-    name: animanga-tracker
+    name: animanga-tracker-frontend
     env: static
     buildCommand: ""
     staticPublishPath: .
@@ -9,11 +10,12 @@ services:
         source: /*
         destination: /index.html
 
+  # Backend API (JSON Server)
   - type: web
-    name: animanga-api
+    name: animanga-api-backend
     env: node
     buildCommand: npm install
-    startCommand: npx json-server db/db.json --port 10000 --host 0.0.0.0
+    startCommand: npm start
     plan: free
     envVars:
       - key: NODE_ENV
