@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: animanga-tracker
+    env: static
+    buildCommand: ""
+    staticPublishPath: .
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  - type: web
+    name: animanga-api
+    env: node
+    buildCommand: npm install
+    startCommand: npx json-server db/db.json --port 10000 --host 0.0.0.0
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
